@@ -1,0 +1,6 @@
+/flagconv
+*.exe
+*.test
+*.out
+*.jsonl
+*.csv
