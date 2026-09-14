@@ -21,12 +21,35 @@ JSONL, one object per line:
 CSV, with a fixed header:
 
 ```csv
-key,enabled,rollout,description
-new-checkout,true,100,redesigned checkout flow
-dark-mode,false,0,
+key,enabled,rollout,description,variants,rules
+new-checkout,true,100,redesigned checkout flow,,
+dark-mode,false,0,,,
 ```
 
 `rollout` is a percentage from 0 to 100.
+
+A flag can also carry variant payloads and targeting rules:
+
+```json
+{
+  "key": "checkout-button-color",
+  "enabled": true,
+  "rollout": 100,
+  "variants": [
+    {"key": "control", "payload": {"color": "blue"}},
+    {"key": "treatment", "payload": {"color": "green"}}
+  ],
+  "rules": [
+    {"attribute": "country", "operator": "in", "values": ["CA", "US"], "variant": "treatment"}
+  ]
+}
+```
+
+`variants` holds arbitrary JSON payloads per variant key. `rules` route a
+context attribute to a variant using one of `equals`, `not_equals`, `in`,
+`not_in`; each rule's `variant` must match a key in `variants`. CSV has no
+way to nest data, so the same information rides along as JSON text in the
+`variants` and `rules` columns instead of being split into their own rows.
 
 ## Usage
 
@@ -67,6 +90,7 @@ memory use stays flat regardless of input size.
 
 ## Status
 
-Early. The flag schema currently covers key, enabled, rollout percentage,
-and description. See the roadmap for what's missing (targeting rules,
-variant payloads, multiple environments per flag).
+Early. The flag schema covers key, enabled, rollout percentage,
+description, variant payloads, and targeting rules. Still missing:
+multiple environments per flag, table-driven edge case tests, a
+validate-only mode, gzip support, and a YAML target.
