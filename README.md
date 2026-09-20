@@ -107,5 +107,7 @@ memory use stays flat regardless of input size.
 
 Early. The flag schema covers key, description, and a list of
 environments each with enabled, rollout percentage, variant payloads, and
-targeting rules. Still missing: table-driven edge case tests, a
-validate-only mode, gzip support, and a YAML target.
+targeting rules. Reader/writer edge cases (bad columns, non-contiguous CSV
+rows, out-of-range rollouts, unknown operators, and so on) are covered by
+table-driven tests in `flag_test.go`. Still missing: a validate-only mode,
+gzip support, and a YAML target.
