@@ -20,11 +20,16 @@ func run() error {
 	to := flag.String("to", "", "output format: jsonl or csv")
 	inPath := flag.String("in", "", "input file (default stdin)")
 	outPath := flag.String("out", "", "output file (default stdout)")
+	validateOnly := flag.Bool("validate-only", false, "check input for errors and report them without writing output")
 	flag.Parse()
 
-	if *from == "" || *to == "" {
+	if *from == "" {
 		flag.Usage()
-		return fmt.Errorf("both -from and -to are required")
+		return fmt.Errorf("-from is required")
+	}
+	if !*validateOnly && *to == "" {
+		flag.Usage()
+		return fmt.Errorf("-to is required unless -validate-only is set")
 	}
 
 	in := os.Stdin
@@ -35,6 +40,17 @@ func run() error {
 		}
 		defer f.Close()
 		in = f
+	}
+
+	if *validateOnly {
+		bad, err := Validate(os.Stderr, in, *from)
+		if err != nil {
+			return err
+		}
+		if bad > 0 {
+			return fmt.Errorf("%d record(s) failed validation", bad)
+		}
+		return nil
 	}
 
 	out := os.Stdout

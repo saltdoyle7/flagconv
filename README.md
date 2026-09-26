@@ -93,6 +93,17 @@ works in a pipeline too:
 cat flags.jsonl | ./flagconv -from jsonl -to csv > flags.csv
 ```
 
+Check a file for errors without converting it:
+
+```sh
+./flagconv -from jsonl -in flags.jsonl -validate-only
+```
+
+Every bad record is printed to stderr and reading continues past it, so
+one pass reports every problem in the file rather than stopping at the
+first one. `-to` and `-out` aren't needed with `-validate-only`; the
+command exits non-zero if any record failed.
+
 ## Why streaming matters here
 
 A large org can easily have a flag export with hundreds of thousands of
@@ -109,5 +120,5 @@ Early. The flag schema covers key, description, and a list of
 environments each with enabled, rollout percentage, variant payloads, and
 targeting rules. Reader/writer edge cases (bad columns, non-contiguous CSV
 rows, out-of-range rollouts, unknown operators, and so on) are covered by
-table-driven tests in `flag_test.go`. Still missing: a validate-only mode,
-gzip support, and a YAML target.
+table-driven tests in `flag_test.go`. Still missing: gzip support and a
+YAML target.

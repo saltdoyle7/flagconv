@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 )
 
@@ -33,4 +34,30 @@ func Convert(w io.Writer, r io.Reader, from, to string) error {
 	}
 
 	return writer.Close()
+}
+
+// Validate reads every record from r without producing any output. Unlike
+// Convert, it doesn't stop at the first bad record: each error is written
+// to errW and reading continues, so one pass reports every problem in the
+// file instead of just the first one. It returns the number of records
+// that failed validation.
+func Validate(errW io.Writer, r io.Reader, from string) (int, error) {
+	reader, err := newReader(from, r)
+	if err != nil {
+		return 0, err
+	}
+
+	bad := 0
+	for {
+		_, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			bad++
+			fmt.Fprintln(errW, err)
+			continue
+		}
+	}
+	return bad, nil
 }
