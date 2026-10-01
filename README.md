@@ -104,6 +104,16 @@ one pass reports every problem in the file rather than stopping at the
 first one. `-to` and `-out` aren't needed with `-validate-only`; the
 command exits non-zero if any record failed.
 
+Gzip input is detected from the first two bytes, so `-in flags.jsonl.gz`
+and a gzipped pipe both work with no flag. Output is compressed when `-out`
+ends in `.gz` or when `-gzip` is given (useful when writing to stdout):
+
+```sh
+./flagconv -from jsonl -to csv -in flags.jsonl.gz -out flags.csv.gz
+```
+
+Compression is streamed along with everything else.
+
 ## Why streaming matters here
 
 A large org can easily have a flag export with hundreds of thousands of
@@ -120,5 +130,5 @@ Early. The flag schema covers key, description, and a list of
 environments each with enabled, rollout percentage, variant payloads, and
 targeting rules. Reader/writer edge cases (bad columns, non-contiguous CSV
 rows, out-of-range rollouts, unknown operators, and so on) are covered by
-table-driven tests in `flag_test.go`. Still missing: gzip support and a
-YAML target.
+table-driven tests in `flag_test.go`. Gzip input and output are handled
+in `compress.go`. Still missing: a YAML target.

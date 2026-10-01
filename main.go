@@ -20,6 +20,7 @@ func run() error {
 	to := flag.String("to", "", "output format: jsonl or csv")
 	inPath := flag.String("in", "", "input file (default stdin)")
 	outPath := flag.String("out", "", "output file (default stdout)")
+	gzipOut := flag.Bool("gzip", false, "gzip-compress output (implied when -out ends in .gz)")
 	validateOnly := flag.Bool("validate-only", false, "check input for errors and report them without writing output")
 	flag.Parse()
 
@@ -42,8 +43,14 @@ func run() error {
 		in = f
 	}
 
+	src, closeSrc, err := maybeGunzip(in)
+	if err != nil {
+		return err
+	}
+	defer closeSrc()
+
 	if *validateOnly {
-		bad, err := Validate(os.Stderr, in, *from)
+		bad, err := Validate(os.Stderr, src, *from)
 		if err != nil {
 			return err
 		}
@@ -63,5 +70,12 @@ func run() error {
 		out = f
 	}
 
-	return Convert(out, in, *from, *to)
+	dst, closeDst := maybeGzip(out, *gzipOut || wantsGzip(*outPath))
+	if err := Convert(dst, src, *from, *to); err != nil {
+		closeDst()
+		return err
+	}
+	// The gzip footer is written on close, so a failure here means the
+	// output file is truncated and has to be reported.
+	return closeDst()
 }
